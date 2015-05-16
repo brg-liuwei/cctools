@@ -1,0 +1,16 @@
+#!/bin/sh
+
+OUTPUT=config.h
+
+rm -rf $OUTPUT
+touch $OUTPUT
+
+pgsize=`pagesize`
+
+echo "#ifndef __CONFIG_H__" >> $OUTPUT
+echo "#define __CONFIG_H__" >> $OUTPUT
+echo "" >> $OUTPUT
+echo "#define PAGESIZE $pgsize" >> $OUTPUT
+echo "#define FY_HAVE_STDLIB_H $pgsize" >> $OUTPUT
+echo "" >> $OUTPUT
+echo "#endif" >> $OUTPUT
