@@ -8,11 +8,11 @@
 
 #include "config.h"
 
-// #ifdef FY_HAVE_SYS_TYPES_H
+#ifdef FY_HAVE_SYS_TYPES_H
 # include <sys/types.h>
-// #else
-// typedef unsigned long size_t;
-// #endif
+#else
+typedef unsigned long size_t;
+#endif
 
 #define FY_MEMALIGN sizeof(unsigned long)
 #define fy_align(x) \

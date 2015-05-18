@@ -1,3 +1,2 @@
-完善config.h，在build_conf中完成fy_alloc.*中需要的宏定义
-
-完善README.md
+写README.md
+写Makefile，根据平台编译静态库和动态库

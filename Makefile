@@ -1,13 +1,13 @@
-$(shell ./build_conf)
-
-CXX = g++
+CXX ?= g++
 RM ?= rm -rf
 OBJS = src/pool.o src/fy_alloc.o
 TEST_OBJS = test/main_test.o
 TEST_BIN = bin/test
 IFLAGS = -I. -I./src/ -I./include/
 LFLAGS =
-FLAGS = #-DNDEBUG
+FLAGS = -DNDEBUG
+
+$(shell ./build_conf config.h)
 
 .PHONY: all
 .PHONY: test

@@ -1,11 +1,11 @@
 #include "fy_alloc.h"
 #include <string.h>
 
-// #ifdef FY_HAVE_MALLOC_H
-// #include <malloc.h>
-// #elif defined FY_HAVE_STDLIB_H
+#ifdef FY_HAVE_MALLOC_H
+#include <malloc.h>
+#elif defined FY_HAVE_STDLIB_H
 #include <stdlib.h>
-// #endif
+#endif
 
 #include <unistd.h>
 #include <assert.h>
