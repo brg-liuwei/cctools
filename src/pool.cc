@@ -9,6 +9,7 @@ using namespace std;
 
 namespace cctools {
     Pool::Pool(size_t size) {
+        objs.reserve(64);
         pool = (void *)fy_pool_create(size);
         assert(pool != NULL);
     }
@@ -17,7 +18,9 @@ namespace cctools {
         for (vector<Base *>::iterator itr = objs.begin();
                 itr != objs.end(); ++itr)
         {
-            (*itr)->~Base();
+            if (*itr != NULL) {
+                (*itr)->~Base();
+            }
         }
         fy_pool_destroy((fy_pool_t *)pool);
     }
