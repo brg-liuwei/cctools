@@ -9,7 +9,7 @@ IFLAGS = -I. -I./src/ -I./include/
 LFLAGS =
 CFLAGS = #-DNDEBUG
 
-LIBRARY = cctools.a
+LIBRARY = libcctools.a
 
 $(shell ./build_conf cctools_config.h)
 
