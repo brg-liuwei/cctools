@@ -9,13 +9,17 @@ IFLAGS = -I. -I./src/ -I./include/
 LFLAGS =
 CFLAGS = #-DNDEBUG
 
+LIBRARY = cctools.a
+
 $(shell ./build_conf cctools_config.h)
 
 .PHONY: all
 .PHONY: test
 .PHONY: clean
 
-all: ${OBJS}
+all: ${LIBRARY}
+${LIBRARY}: ${OBJS}
+	${AR} -rs $@ ${OBJS}
 ${OBJS}: %.o: %.cc
 	${CXX} ${IFLAGS} ${LFLAGS} ${CFLAGS} -c $^ -o $@
 
@@ -26,4 +30,4 @@ ${TEST_OBJS}: %.o: %.cc
 	${CXX} ${IFLAGS} ${LFLAGS} ${CFLAGS} -c $^ -o $@
 
 clean:
-	$(RM) *.o src/*.o test/*.o bin/* cctools_config.h
+	$(RM) *.o src/*.o test/*.o bin/* cctools_config.h ${LIBRARY}

@@ -1,2 +1,3 @@
 写README.md
-写Makefile，根据平台编译静态库和动态库
+Makefile，平台判断
+编译动态库
