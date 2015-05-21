@@ -1,6 +1,6 @@
 #!/bin/sh
 
-function test_malloc_h() {
+test_malloc_h() {
     g++ -x c++ - -o /dev/null 2>/dev/null << EOF
     g++ -x c++ - -o /dev/null << EOF
        #include <malloc.h>
@@ -8,14 +8,14 @@ function test_malloc_h() {
 EOF
 }
 
-function test_stdlib_h() {
+test_stdlib_h() {
     g++ -x c++ - -o /dev/null 2>/dev/null << EOF
         #include <stdlib.h>
         int main() { return 0; }
 EOF
 }
 
-function test_systypes_h() {
+test_systypes_h() {
     g++ -x c++ - -o /dev/null 2>/dev/null << EOF
         #include <sys/types.h>
         int main() { return 0; }
@@ -35,6 +35,10 @@ touch $OUTPUT
 
 if test -z "$CXX"; then
     CXX=g++
+fi
+
+if test -z "bin"; then
+    `mkdir bin`
 fi
 
 pgsize=`getconf PAGESIZE`
