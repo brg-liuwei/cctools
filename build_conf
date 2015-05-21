@@ -37,7 +37,7 @@ if test -z "$CXX"; then
     CXX=g++
 fi
 
-if test -z "bin"; then
+if [ ! -d "bin" ]; then
     `mkdir bin`
 fi
 

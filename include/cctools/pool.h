@@ -1,7 +1,7 @@
 #ifndef __CCTOOLS_POOL_H__
 #define __CCTOOLS_POOL_H__
 
-#include "config.h"
+#include "cctools_config.h"
 
 #include <sys/types.h>
 #include <unistd.h>

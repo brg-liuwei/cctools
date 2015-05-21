@@ -6,7 +6,7 @@
  * I followed your memory pool of nginx 
  * */
 
-#include "config.h"
+#include "cctools_config.h"
 
 #ifdef FY_HAVE_SYS_TYPES_H
 # include <sys/types.h>

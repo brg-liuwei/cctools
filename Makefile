@@ -9,7 +9,7 @@ IFLAGS = -I. -I./src/ -I./include/
 LFLAGS =
 CFLAGS = #-DNDEBUG
 
-$(shell ./build_conf config.h)
+$(shell ./build_conf cctools_config.h)
 
 .PHONY: all
 .PHONY: test
@@ -26,4 +26,4 @@ ${TEST_OBJS}: %.o: %.cc
 	${CXX} ${IFLAGS} ${LFLAGS} ${CFLAGS} -c $^ -o $@
 
 clean:
-	$(RM) *.o src/*.o test/*.o bin/* config.h
+	$(RM) *.o src/*.o test/*.o bin/* cctools_config.h
