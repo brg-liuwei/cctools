@@ -1,6 +1,6 @@
 CXX ?= g++
 RM ?= rm -rf
-OBJS = src/pool.o src/fy_alloc.o
+OBJS = src/pool.o src/fy_alloc.o src/conf.o
 
 TEST_OBJS = test/main_test.o
 TEST_BIN = bin/test

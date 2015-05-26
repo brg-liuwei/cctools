@@ -1,5 +1,6 @@
 #include "cctools/pool.h"
 #include "cctools/threadSafeMap.h"
+#include "cctools/conf.h"
 
 #include <new>
 #include <iostream>
@@ -53,7 +54,15 @@ int test_thread_safe_map() {
     return 0;
 }
 
+void test_conf() {
+    Conf *c = NewConf("test/cctools.cfg");
+    delete c;
+    Conf *c2 = NewConf("test/notexist.cfg");
+    delete c2;
+}
+
 int main() {
     test_pool();
     test_thread_safe_map();
+    test_conf();
 }
