@@ -20,12 +20,13 @@ namespace cctools {
             bool GetStringVec(string key, vector<string> &val, char sep);
             bool GetInt(string key, int &val);
             bool GetIntVec(string key, vector<int> &val, char sep);
-            bool GetDouble(string key, double &val);
-            bool GetDoubleVec(string key, vector<double> &val, char *sep);
 
         private:
             FILE *fp;
             map<string, string> m;
+
+        private:
+            bool split(string key, vector<string> &vec, char sep);
 
         private:
             // No copying allowed

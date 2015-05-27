@@ -56,9 +56,30 @@ int test_thread_safe_map() {
 
 void test_conf() {
     Conf *c = NewConf("test/cctools.cfg");
+    vector<string> val;
+    if (c->GetStringVec("stringVec", val, ';')) {
+        for (vector<string>::iterator itr = val.begin(); itr != val.end(); ++itr) {
+            cout << " >>>>> vec1: " << *itr << " len: " << itr->size() << endl;
+        }
+    }
+    if (c->GetStringVec("stringVec2", val, ';')) {
+        for (vector<string>::iterator itr = val.begin(); itr != val.end(); ++itr) {
+            cout << " >>>>> vec2: " << *itr << " len: " << itr->size() << endl;
+        }
+    }
+    int ival;
+    if (c->GetInt("intKey", ival)) {
+        cout << ">>> intVal:" << ival << endl;
+    }
+    vector<int> ivec;
+    if (c->GetIntVec("intKeyVec", ivec, ',')) {
+        for (vector<int>::iterator itr = ivec.begin(); itr != ivec.end(); ++itr) {
+            cout << "-------> vec int: " << *itr << endl;
+        }
+    }
     delete c;
-    Conf *c2 = NewConf("test/notexist.cfg");
-    delete c2;
+    // Conf *c2 = NewConf("test/notexist.cfg");
+    // delete c2;
 }
 
 int main() {
