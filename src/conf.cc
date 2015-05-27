@@ -156,8 +156,6 @@ bool Conf::GetIntVec(string key, vector<int> &val, char sep) {
     for (vector<string>::iterator itr = svec.begin(); itr != svec.end(); ++itr) {
         if (strAtoi(*itr, ival)) {
             val.push_back(ival);
-        } else {
-            cout << "################# strAtoi Error: " << *itr << endl;
         }
     }
     return true;
