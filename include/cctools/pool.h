@@ -29,7 +29,7 @@ namespace cctools {
         public:
             explicit Pool(size_t size = PAGESIZE);
             virtual ~Pool();
-            void Add(Base *base);
+            Base *Add(Base *base);
             void *Alloc(size_t size);
 
         private:

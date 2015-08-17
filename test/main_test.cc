@@ -1,6 +1,7 @@
 #include "cctools/pool.h"
 #include "cctools/threadSafeMap.h"
 #include "cctools/conf.h"
+#include "cctools/logger.h"
 
 #include <new>
 #include <iostream>
@@ -16,9 +17,11 @@ struct Derived : public Base {
     static Base *NewDerived(Pool *pool) {
         void *buff = pool->Alloc(sizeof(Derived));
         assert(buff != NULL);
-        Base *obj = new (buff) Derived;
+        // Base *obj = new (buff) Derived;
+        // assert(obj != NULL);
+        // pool->Add(obj);
+        Base *obj = pool->Add(new (buff) Derived); // placement new
         assert(obj != NULL);
-        pool->Add(obj);
         return obj;
     }
 };
@@ -82,8 +85,25 @@ void test_conf() {
     // delete c2;
 }
 
+void test_logger() {
+    Logger *log = new Logger("log_test.log");
+    log->Debug("this is debug message");
+    log->Info("this is info message");
+    string long_msg("this is long message ");
+    string msg;
+    while (msg.size() <= 1024) {
+        msg.append(long_msg);
+    }
+    log->Warn(msg);
+    log->Error("this is error message");
+    log->Crit("this is crit message, program will abort after this record");
+    delete log;
+}
+
 int main() {
     test_pool();
     test_thread_safe_map();
     test_conf();
+    test_logger();
+    return 0;
 }

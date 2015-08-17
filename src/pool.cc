@@ -25,10 +25,11 @@ namespace cctools {
         fy_pool_destroy((fy_pool_t *)pool);
     }
 
-    void Pool::Add(Base *base) {
+    Base *Pool::Add(Base *base) {
         if (base != NULL) {
             objs.push_back(base);
         }
+        return base;
     }
 
     void *Pool::Alloc(size_t size) {
