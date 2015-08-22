@@ -5,6 +5,8 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include <assert.h>
+
 #include <vector>
 
 #ifndef NDEBUG
@@ -41,6 +43,27 @@ namespace cctools {
             Pool(const Pool&);
             void operator=(const Pool&);
     };
+
+    /*
+     * Usage:
+     *     class A : public cctools::Base { ... };
+     *     cctools::Pool *mempool = new cctools::Pool();
+     *     A *a;
+     *
+     *     NewClassFromPool(mempool, A, a);
+     *
+     *     // do some staff with a
+     *
+     *     delete mempool;
+     */
+#define NewClassFromPool(pool, derivedClass, ptr) do { \
+    void *buff = pool->Alloc(sizeof(derivedClass)); \
+    assert(buff != NULL); \
+    cctools::Base *basePtr = pool->Add(new (buff) derivedClass); \
+    ptr = dynamic_cast<derivedClass *>(basePtr); \
+    assert(ptr != NULL); \
+} while (0)
+
 };
 
 #endif

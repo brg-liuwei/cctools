@@ -11,27 +11,22 @@ using namespace std;
 using namespace cctools;
 
 struct Derived : public Base {
-    Derived() { cout << "Derived()" << endl; }
-    virtual ~Derived() { cout << "~Derived()" << endl; }
-
-    static Base *NewDerived(Pool *pool) {
-        void *buff = pool->Alloc(sizeof(Derived));
-        assert(buff != NULL);
-        // Base *obj = new (buff) Derived;
-        // assert(obj != NULL);
-        // pool->Add(obj);
-        Base *obj = pool->Add(new (buff) Derived); // placement new
-        assert(obj != NULL);
-        return obj;
-    }
+    Derived() { cout << "Derived():" << this << endl; }
+    void Offset() { cout << "offset: " << this << endl; }
+    virtual ~Derived() { cout << "~Derived():" << this << endl; }
 };
 
 int test_pool() {
     Pool *p = new Pool();
+    Derived *ptr1, *ptr2, *ptr3;
 
-    Derived::NewDerived(p);
-    Derived::NewDerived(p);
-    Derived::NewDerived(p);
+    NewClassFromPool(p, Derived, ptr1);
+    NewClassFromPool(p, Derived, ptr2);
+    NewClassFromPool(p, Derived, ptr3);
+
+    ptr1->Offset();
+    ptr2->Offset();
+    ptr3->Offset();
 
     delete p;
     return 0;
