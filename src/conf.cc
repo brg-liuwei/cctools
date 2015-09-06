@@ -65,13 +65,13 @@ namespace {
         v *= sign;
         return true;
     }
-}; // end of anomious namespace
+}; // end of anonymous namespace
 
 Conf::Conf(FILE *openFp) {
     new (this) Conf(openFp, ';');
 }
 
-Conf::Conf(FILE *openFp, char sep): fp(openFp) {
+Conf::Conf(FILE *openFp, char sep) : fp(openFp) {
     char lineBuff[4096], line[4096];
     setvbuf(fp, lineBuff, _IOLBF, 4096);
 

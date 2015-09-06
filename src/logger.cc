@@ -19,8 +19,8 @@ namespace cctools {
 namespace {
     char levels[][sizeof("[DEBUG]")] = {
         "[DEBUG]",
-        "[WARN]",
         "[INFO]",
+        "[WARN]",
         "[ERROR]",
         "[CRIT]"
     };
@@ -56,7 +56,7 @@ namespace {
                 now.tm_hour,
                 now.tm_min,
                 now.tm_sec,
-                tv.tv_usec / 1000,
+                (int)(tv.tv_usec / 1000),
                 levels[level],
                 msg.c_str());
 
@@ -66,7 +66,7 @@ namespace {
             free(p);
         }
     }
-}; // end of amonious namespace
+}; // end of anonymous namespace
 
 Logger::Logger(const string path, LogLevel level) {
     assert(level >= DEBUG && level <= CRIT);

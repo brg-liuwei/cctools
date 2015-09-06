@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 test_malloc_h() {
     g++ -x c++ - -o /dev/null 2>/dev/null << EOF

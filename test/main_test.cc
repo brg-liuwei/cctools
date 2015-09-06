@@ -10,10 +10,11 @@
 using namespace std;
 using namespace cctools;
 
-struct Derived : public Base {
-    Derived() { cout << "Derived():" << this << endl; }
-    void Offset() { cout << "offset: " << this << endl; }
-    virtual ~Derived() { cout << "~Derived():" << this << endl; }
+class Derived : public Base {
+    public:
+        Derived() { cout << "Derived():" << this << endl; }
+        void Offset() { cout << "offset: " << this << endl; }
+        virtual ~Derived() { cout << "~Derived():" << this << endl; }
 };
 
 int test_pool() {
@@ -34,20 +35,21 @@ int test_pool() {
 
 int test_thread_safe_map() {
     string val;
-    ThreadSafeMap<string, string> m;
     string key1("key1"), key2("key2"), val1("val1"), val2("val2");
 
-    m.Put(key1, val1);
-    m.Put(key2, val1);
-    cout << "key1: " << m.Get(key1, val) << ", val: " << val << endl;
-    cout << "key2: " << m.Get(key2, val) << ", val: " << val << endl;
-    cout << "val1: " << m.Get(val1, val) << ", val: " << val << endl;
+    ThreadSafeMap<string, string> *m = new ThreadSafeMap<string, string>();
 
-    m.Put(key2, val2);
-    cout << "update key2: " << m.Get(key2, val) << ", val: " << val << endl;
+    m->Put(key1, val1);
+    m->Put(key2, val1);
+    cout << "key1: " << m->Get(key1, val) << ", val: " << val << endl;
+    cout << "key2: " << m->Get(key2, val) << ", val: " << val << endl;
+    cout << "val1: " << m->Get(val1, val) << ", val: " << val << endl;
 
-    m.Del(key1);
-    cout << "delete key1: " << m.Get(key1, val) << ", val: " << val << endl;
+    m->Put(key2, val2);
+    cout << "update key2: " << m->Get(key2, val) << ", val: " << val << endl;
+
+    m->Del(key1);
+    cout << "delete key1: " << m->Get(key1, val) << ", val: " << val << endl;
 
     return 0;
 }

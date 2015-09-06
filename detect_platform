@@ -1,0 +1,19 @@
+#!/bin/bash
+
+OUTPUT=$1
+if test -z "$OUTPUT"; then
+    echo "Usage: $0 <output file>"
+    echo "eg:"
+    echo "    $0 vars.mk"
+    exit 1
+fi
+
+OS=$(uname -s)
+if [ $OS == "Darwin" ]; then
+    echo "DY_SUFFIX=dylib" >> $OUTPUT
+elif [ $OS == "Linux" ]; then
+    echo "DY_SUFFIX=so" >> $OUTPUT
+else
+    echo "Unknown system"
+    exit 1
+fi

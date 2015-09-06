@@ -36,8 +36,8 @@ namespace cctools {
             string GetPath() { return this->path; }
 
             void Debug(string msg);
-            void Warn(string msg);
             void Info(string msg);
+            void Warn(string msg);
             void Error(string msg);
             void Crit(string msg);
 

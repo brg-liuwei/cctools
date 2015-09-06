@@ -17,13 +17,14 @@ using namespace std;
 
 namespace cctools {
 
-    struct Base {
+    class Base {
+        public:
 #ifdef NDEBUG
-        Base() {}
-        virtual ~Base() {}
+            Base() {}
+            virtual ~Base() {}
 #else
-        Base() { cout << "Base()" << endl; }
-        virtual ~Base() { cout << "~Base()" << endl; }
+            Base() { cout << "Base()" << endl; }
+            virtual ~Base() { cout << "~Base()" << endl; }
 #endif
     };
 
