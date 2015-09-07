@@ -9,7 +9,7 @@ TEST_NET_OBJS = test/net_test.o
 TEST_NET_BIN = bin/net_test
 
 IFLAGS = -I. -I./src/ -I./include/
-LFLAGS = -L.
+LFLAGS = -L. -lcctools -lpthread
 CFLAGS = -fPIC #-DNDEBUG
 
 STATIC_LIB = libcctools.a
@@ -21,8 +21,7 @@ $(shell ./detect_platform ${VAR})
 include ${VAR}
 
 .PHONY: all
-.PHONY: test_main
-.PHONY: test_net
+.PHONY: test
 .PHONY: clean
 
 all: ${STATIC_LIB} ${DYNAMIC_LIB}
@@ -33,15 +32,13 @@ ${DYNAMIC_LIB}: ${OBJS}
 ${OBJS}: %.o: %.cc
 	${CXX} ${IFLAGS} ${CFLAGS} -c $^ -o $@
 
-test_main: ${TEST_MAIN_BIN}
+test: ${TEST_MAIN_BIN} ${TEST_NET_BIN}
 ${TEST_MAIN_BIN}: ${TEST_MAIN_OBJS}
-	${CXX} ${IFLAGS} ${LFLAGS} -lcctools ${CFLAGS} -o $@ $^
+	${CXX} $^ ${LFLAGS} ${CFLAGS} -o $@
+${TEST_NET_BIN}: ${TEST_NET_OBJS}
+	${CXX} $^ ${LFLAGS} ${CFLAGS} -o $@
 ${TEST_MAIN_OBJS}: %.o: %.cc
 	${CXX} ${IFLAGS} ${CFLAGS} -c $^ -o $@
-
-test_net: ${TEST_NET_BIN}
-${TEST_NET_BIN}: ${TEST_NET_OBJS}
-	${CXX} ${IFLAGS} ${LFLAGS} -lcctools ${CFLAGS} -o $@ $^
 ${TEST_NET_OBJS}: %.o: %.cc
 	${CXX} ${IFLAGS} ${CFLAGS} -c $^ -o $@
 

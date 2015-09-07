@@ -10,16 +10,24 @@ using namespace cctools;
 
 class CronEvent : public Event {
     public:
-        explicit CronEvent(Logger *l) : Event(1000), logger(l), procCnt(0) {}
+        explicit CronEvent(Logger *l) : Event(1000), procCnt(0) {
+	    SetLogger(l);
+	    type = EV_EXPIRE;
+        }
         virtual string Name() {
             string name("CronJobEvent");
             return name;
         }
-        virtual void Proc() { logger->Info("Proc cnt: " + Itos(procCnt++)); }
-        virtual bool Active() { return procCnt < 10; }
+        virtual void Proc(EventType type) {
+	    if (type == EV_EXPIRE) {
+	        logger->Info("Proc cnt: " + Itos(procCnt++));
+	    } else {
+		logger->Crit("Unexpected event type of :" + Itos(type));
+	    }
+	}
+        virtual bool Active() { return procCnt < 2; }
     private:
         int procCnt;
-        Logger *logger;
 };
 
 int main() {
@@ -27,7 +35,7 @@ int main() {
     assert(l != NULL);
 
     Net service(l);
-    IOEvent *lev = new ListenEvent("127.0.0.1", "6666", CommonIOEventCreater, l);
+    IOEvent *lev = new ListenEvent("127.0.0.1", 6666, CommonIOEventCreater, l);
     Event *cron = new CronEvent(l);
 
     service.AddIOEvent(lev);

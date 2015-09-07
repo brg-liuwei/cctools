@@ -28,6 +28,11 @@ ListenEvent::ListenEvent(string ip, int port, IOEventCreater func, Logger *l) :
         logger->Crit("fail to create socket: " + Ctos(strerror(errno)));
     }
 
+    int flag = fcntl(fd, F_GETFL, 0);
+    if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1) {
+        logger->Crit(Name() + " fcntl set nonblock error: " + Ctos(strerror(errno)));
+    }
+
     int opt = 1;
     if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
         logger->Crit("fail to set socket reuse: " + Ctos(strerror(errno)));
@@ -58,19 +63,23 @@ void ListenEvent::acceptProc() {
     }
     sockaddr_in remoteAddr;
     socklen_t socklen;
-    int sock = accept(fd, reinterpret_cast<sockaddr *>(&remoteAddr), &socklen);
-    if (sock == -1) {
-        logger->Error(Name() + " accept error: " + Ctos(strerror(errno)));
-        return;
-    }
-    IOEvent *e = ioevCreater(sock, reinterpret_cast<sockaddr *>(&remoteAddr), logger);
-    if (e == NULL) {
-        logger->Error(Name() + "\'s IOEventCreater create NULL event");
-        close(sock);
-        return;
-    }
-    if (net->AddIOEvent(e) == false) {
-        delete e;
+    while (true) {
+	bzero(reinterpret_cast<void *>(&remoteAddr), sizeof(sockaddr_in));
+        int sock = accept(fd, reinterpret_cast<sockaddr *>(&remoteAddr), &socklen);
+        if (sock == -1) {
+            if (errno != EWOULDBLOCK) {
+                logger->Error(Name() + " accept error: " + Ctos(strerror(errno)));
+            }
+            return;
+        }
+        IOEvent *e = ioevCreater(sock, reinterpret_cast<sockaddr *>(&remoteAddr), logger);
+        if (e == NULL) {
+            logger->Error(Name() + "\'s IOEventCreater create NULL event");
+            close(sock);
+        } else if (net->AddIOEvent(e) == false) {
+            logger->Error(Name() + " add IOEvent error, event: " + e->Name());
+            delete e;
+        }
     }
 }
 
@@ -152,6 +161,10 @@ void CommonIOEvent::readProc() {
         assert(headIdx >= 0 && headIdx < 8);
         while (headIdx < 8) {
             int n = read(fd, head + headIdx, 8 - headIdx);
+            if (n == 0) {
+                // remote peer closed
+                goto error;
+            }
             if (n == -1) {
                 if (errno == EAGAIN) {
                     return;
@@ -163,6 +176,7 @@ void CommonIOEvent::readProc() {
             headIdx += n;
         }
         assert(headIdx == 8);
+        head[8] = '\0';
         rremain = atoi(head);
         if (rremain == 0) {
             logger->Error(Name() + " read socket rremain zero, buffer: " + Ctos(head));
@@ -190,7 +204,6 @@ void CommonIOEvent::readProc() {
     assert(rremain == 0);
 
     // bufProc();
-    logger->Info(">>>>>>>>>> " + rbuf);
     wbuf.assign("{\"msg\":\"read ok\"}");
     type = EV_WRITE;
     net->ModIOEvent(this);
@@ -206,19 +219,42 @@ error:
 }
 
 void CommonIOEvent::writeProc() {
+    if (headIdx != 8) {
+        logger->Info(Name() + " writeProc headIdx: " + Itos(headIdx));
+        if (headIdx == -1) {
+            snprintf(head, 9, "%08d", wbuf.size());
+            headIdx = 0;
+        }
+        while (headIdx < 8) {
+            int n = write(fd, head + headIdx, 8 - headIdx);
+            if (n == -1) {
+                if (errno == EAGAIN) {
+                    return;
+                } else {
+                    logger->Error(Name() + " write socket head error: " + Ctos(strerror(errno)));
+                    goto error;
+                }
+            }
+            headIdx += n;
+            logger->Info(Name() + " writeProc [while] headIdx: " + Itos(headIdx));
+        }
+    }
+
     while (!wbuf.empty()) {
+        logger->Info(Name() + " write buf: " + wbuf);
         int n = write(fd, wbuf.c_str(), wbuf.size());
         if (n == -1) {
             if (errno == EAGAIN) {
                 return;
             } else {
-                logger->Error(Name() + " write socket error: " + Ctos(strerror(errno)));
+                logger->Error(Name() + " write socket body error: " + Ctos(strerror(errno)));
                 goto error;
             }
         }
         wbuf.erase(0, n);
     }
 
+    logger->Info(Name() + " write buf ok");
     // write ok
     headIdx = 0;
     type = EV_READ;
@@ -226,6 +262,7 @@ void CommonIOEvent::writeProc() {
     return;
 
 error:
+    logger->Info(Name() + " write error");
     close(fd);
     fd = -1;
 }
@@ -237,7 +274,7 @@ IOEvent *CommonIOEventCreater(int fd, sockaddr *addr, Logger *l) {
 
     string cliAddr(inet_ntoa(reinterpret_cast<sockaddr_in *>(addr)->sin_addr));
     int cliPort(ntohs(reinterpret_cast<sockaddr_in *>(addr)->sin_port));
-    return new CommonIOEvent(fd, 5 * 60 * 1000, cliAddr, cliPort, l); // expire: 5min
+    return new CommonIOEvent(fd, 1 * 60 * 1000, cliAddr, cliPort, l); // expire: 1min
 }
 
 #define EPSIZE 1024
@@ -289,6 +326,7 @@ bool Net::AddIOEvent(IOEvent *e) {
         default:
             logger->Crit("Illegal event[" + e->Name() + "] type of " + Itos(e->Type()));
     }
+    ev.events |= EPOLLET;
     if (epoll_ctl(epfd, EPOLL_CTL_ADD, e->GetFd(), &ev) == -1) {
         logger->Error("Fail to Add event[" + e->Name() + "]: " + Ctos(strerror(errno)));
         return false;
@@ -311,7 +349,8 @@ bool Net::ModIOEvent(IOEvent *e) {
         default:
             logger->Crit("Illegal event[" + e->Name() + "] type of " + Itos(e->Type()));
     }
-    if (epoll_ctl(epfd, EPOLL_CTL_DEL, e->GetFd(), &ev) == -1) {
+    ev.events |= EPOLLET;
+    if (epoll_ctl(epfd, EPOLL_CTL_MOD, e->GetFd(), &ev) == -1) {
         logger->Error("Fail to Mod event[" + e->Name() + "]: " + strerror(errno));
         return false;
     }
@@ -343,6 +382,7 @@ void Net::Start() {
         if (milli < 0) {
             milli = 0;
         }
+        logger->Debug(">>>>>>>>>>>>>>>> heap size: " + Itos(heap.size()) + ", wait: " + Itos(milli));
         int nevs = epoll_wait(epfd, (struct epoll_event *)evs, EPSIZE, milli);
         if (nevs < 0) {
             logger->Warn("epoll wait error: " + Ctos(strerror(errno)));
