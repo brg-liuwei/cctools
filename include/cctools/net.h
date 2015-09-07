@@ -21,10 +21,10 @@ namespace cctools {
 class Net;
 
 enum EventType {
-    EV_ERROR,
-    EV_READ,
-    EV_WRITE,
-    EV_EXPIRE,
+    EVT_ERROR = 0,
+    EVT_READ,
+    EVT_WRITE,
+    EVT_EXPIRE,
 };
 
 class Event {
@@ -139,11 +139,12 @@ class Net {
         Event *PopEvent();
         bool AddIOEvent(IOEvent *e);
         bool ModIOEvent(IOEvent *e);
+        bool DelIOEvent(IOEvent *e);
         void Start();
         void Stop();
 
     private:
-        int epfd;
+        int evfd;
         bool running;
         Logger *logger;
         priority_queue<Event *, vector<Event *>, pEventComparator> heap;

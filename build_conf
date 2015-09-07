@@ -1,24 +1,20 @@
 #!/bin/bash
 
-test_malloc_h() {
+test_header() {
     g++ -x c++ - -o /dev/null 2>/dev/null << EOF
-    g++ -x c++ - -o /dev/null << EOF
-       #include <malloc.h>
+       #include <$1>
        int main() { return 0; }
 EOF
 }
 
-test_stdlib_h() {
+test_kqueue() {
     g++ -x c++ - -o /dev/null 2>/dev/null << EOF
-        #include <stdlib.h>
-        int main() { return 0; }
-EOF
-}
-
-test_systypes_h() {
-    g++ -x c++ - -o /dev/null 2>/dev/null << EOF
-        #include <sys/types.h>
-        int main() { return 0; }
+       #include <sys/types.h>
+       #include <sys/event.h>
+       #include <sys/time.h>
+       int main() {
+           return kqueue();
+       }
 EOF
 }
 
@@ -61,19 +57,29 @@ echo "#define __CONFIG_H__" >> $OUTPUT
 echo "" >> $OUTPUT
 echo "#define PAGESIZE $pgsize" >> $OUTPUT
 
-`test_malloc_h`
-if [ "$?" = 0 ]; then
+$(test_header malloc.h)
+if [ "$?" == 0 ]; then
     echo "#define FY_HAVE_MALLOC_H" >> $OUTPUT
 fi
 
-`test_stdlib_h`
-if [ "$?" = 0 ]; then
+$(test_header stdlib.h)
+if [ "$?" == 0 ]; then
     echo "#define FY_HAVE_STDLIB_H" >> $OUTPUT
 fi
 
-`test_systypes_h`
-if [ "$?" = 0 ]; then
+$(test_header sys/types.h)
+if [ "$?" == 0 ]; then
     echo "#define FY_HAVE_SYS_TYPES_H" >> $OUTPUT
+fi
+
+$(test_header sys/epoll.h)
+if [ "$?" == 0 ]; then
+    echo "#define HAVE_EPOLL" >> $OUTPUT
+fi
+
+$(test_kqueue)
+if [ "$?" == 0 ]; then
+    echo "#define HAVE_KQUEUE" >> $OUTPUT
 fi
 
 echo "" >> $OUTPUT

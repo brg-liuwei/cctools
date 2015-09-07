@@ -20,9 +20,7 @@ VAR = vars
 $(shell ./detect_platform ${VAR})
 include ${VAR}
 
-.PHONY: all
-.PHONY: test
-.PHONY: clean
+.PHONY: all test clean
 
 all: ${STATIC_LIB} ${DYNAMIC_LIB}
 ${STATIC_LIB}: ${OBJS}

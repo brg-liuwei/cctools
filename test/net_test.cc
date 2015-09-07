@@ -12,14 +12,14 @@ class CronEvent : public Event {
     public:
         explicit CronEvent(Logger *l) : Event(1000), procCnt(0) {
 	    SetLogger(l);
-	    type = EV_EXPIRE;
+	    type = EVT_EXPIRE;
         }
         virtual string Name() {
             string name("CronJobEvent");
             return name;
         }
         virtual void Proc(EventType type) {
-	    if (type == EV_EXPIRE) {
+	    if (type == EVT_EXPIRE) {
 	        logger->Info("Proc cnt: " + Itos(procCnt++));
 	    } else {
 		logger->Crit("Unexpected event type of :" + Itos(type));
@@ -32,6 +32,7 @@ class CronEvent : public Event {
 
 int main() {
     Logger *l = new Logger("/dev/stderr");
+    // l->SetLevel(INFO);
     assert(l != NULL);
 
     Net service(l);
