@@ -489,7 +489,7 @@ void Net::Start() {
 
     running = true;
 
-#if HAVE_EPOLL
+#ifdef HAVE_EPOLL
     struct epoll_event evs[EVPOOLSIZE];
 #elif defined HAVE_KQUEUE
     struct kevent *evs[EVPOOLSIZE];
