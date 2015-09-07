@@ -219,10 +219,6 @@ void CommonIOEvent::readProc() {
     // bufProc();
     wbuf.assign("{\"msg\":\"read ok\"}");
 
-#ifdef HAVE_KQUEUE
-    net->DelIOEvent(this);
-#endif
-
     type = EVT_WRITE;
     if (net->ModIOEvent(this) == false) {
         logger->Error(Name() + " ModIOEvent to EVT_WRITE error: " + Ctos(strerror(errno)));
@@ -282,10 +278,6 @@ void CommonIOEvent::writeProc() {
     logger->Debug(Name() + " write buf ok");
     // write ok
     headIdx = 0;
-
-#ifdef HAVE_KQUEUE
-    net->DelIOEvent(this);
-#endif
 
     type = EVT_READ;
     if (net->ModIOEvent(this) == false) {
@@ -408,7 +400,8 @@ bool Net::ModIOEvent(IOEvent *e) {
             ev.events = EPOLLOUT;
             break;
         default:
-            logger->Crit("ModIOEvent Illegal event[" + e->Name() + "] type of " + Itos(e->Type()));
+            logger->Crit("ModIOEvent Illegal event[" + e->Name()
+                    + "] type of " + Itos(e->Type()));
     }
     ev.events |= EPOLLET;
     if (epoll_ctl(evfd, EPOLL_CTL_MOD, e->GetFd(), &ev) == -1) {
@@ -416,22 +409,29 @@ bool Net::ModIOEvent(IOEvent *e) {
         return false;
     }
 #elif defined HAVE_KQUEUE
-    int16_t filter;
+    int16_t filter, pre_filter;
     switch (e->Type()) {
         case EVT_READ:
             filter = EVFILT_READ;
+            pre_filter = EVFILT_WRITE;
             break;
         case EVT_WRITE:
             filter = EVFILT_WRITE;
+            pre_filter = EVFILT_READ;
             break;
         default:
             logger->Crit("ModIOEvent Illegal event[" + e->Name()
                     + "] type of " + Itos(e->Type()));
     }
     struct kevent ev;
+    EV_SET(&ev, e->GetFd(), pre_filter, EV_DELETE, 0, 0, e);
+    if (kevent(evfd, &ev, 1, NULL, 0, NULL) == -1) {
+        logger->Error("Fail to del event[" + e->Name() + "]: " + Ctos(strerror(errno)));
+        return false;
+    }
     EV_SET(&ev, e->GetFd(), filter, EV_ADD, 0, 0, e);
     if (kevent(evfd, &ev, 1, NULL, 0, NULL) == -1) {
-        logger->Error("Fail to Add event[" + e->Name() + "]: " + Ctos(strerror(errno)));
+        logger->Error("Fail to Mod event[" + e->Name() + "]: " + Ctos(strerror(errno)));
         return false;
     }
 #else
