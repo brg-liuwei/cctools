@@ -251,7 +251,8 @@ void CommonIOEvent::writeProc() {
                 if (errno == EAGAIN) {
                     return;
                 } else {
-                    logger->Error(Name() + " write socket head error: " + Ctos(strerror(errno)));
+                    logger->Error(Name() + " write socket head error: "
+                            + Ctos(strerror(errno)));
                     goto error;
                 }
             }
@@ -268,7 +269,8 @@ void CommonIOEvent::writeProc() {
             if (errno == EAGAIN) {
                 return;
             } else {
-                logger->Error(Name() + " write socket body error: " + Ctos(strerror(errno)));
+                logger->Error(Name() + " write socket body error: " 
+                        + Ctos(strerror(errno)));
                 goto error;
             }
         }
@@ -281,7 +283,8 @@ void CommonIOEvent::writeProc() {
 
     type = EVT_READ;
     if (net->ModIOEvent(this) == false) {
-        logger->Error(Name() + " ModIOEvent to EVT_READ error: " + Ctos(strerror(errno)));
+        logger->Error(Name() + " ModIOEvent to EVT_READ error: " 
+                + Ctos(strerror(errno)));
         goto error;
     }
     return;
@@ -355,7 +358,8 @@ bool Net::AddIOEvent(IOEvent *e) {
             ev.events = EPOLLOUT;
             break;
         default:
-            logger->Crit("AddIOEvent Illegal event[" + e->Name() + "] type of " + Itos(e->Type()));
+            logger->Crit("AddIOEvent Illegal event[" + e->Name() 
+                    + "] type of " + Itos(e->Type()));
     }
     ev.events |= EPOLLET;
     if (epoll_ctl(evfd, EPOLL_CTL_ADD, e->GetFd(), &ev) == -1) {
@@ -372,12 +376,14 @@ bool Net::AddIOEvent(IOEvent *e) {
             filter = EVFILT_WRITE;
             break;
         default:
-            logger->Crit("AddIOEvent Illegal event[" + e->Name() + "] type of " + Itos(e->Type()));
+            logger->Crit("AddIOEvent Illegal event[" + e->Name() 
+                    + "] type of " + Itos(e->Type()));
     }
     struct kevent ev;
     EV_SET(&ev, e->GetFd(), filter, EV_ADD, 0, 0, e);
     if (kevent(evfd, &ev, 1, NULL, 0, NULL) == -1) {
-        logger->Error("Fail to Add event[" + e->Name() + "]: " + Ctos(strerror(errno)));
+        logger->Error("Fail to Add event[" + e->Name() 
+                + "]: " + Ctos(strerror(errno)));
         return false;
     }
 #else
@@ -505,12 +511,12 @@ void Net::Start() {
         }
         logger->Debug(">>> heap size: " + Itos(heap.size()) + ", wait: " + Itos(milli));
 #ifdef HAVE_EPOLL
-        int nevs = epoll_wait(evfd, (struct epoll_event *)evs, EVPOOLSIZE, milli);
+        int nevs = epoll_wait(evfd, reinterpret_cast<struct epoll_event *>(evs), EVPOOLSIZE, milli);
 #elif defined HAVE_KQUEUE
         struct timespec ts;
         ts.tv_sec = milli / 1000;
         ts.tv_nsec = (milli % 1000) * 1000 * 1000;
-        int nevs = kevent(evfd, NULL, 0, (struct kevent *)evs, EVPOOLSIZE, &ts);
+        int nevs = kevent(evfd, NULL, 0, reinterpret_cast<struct kevent *>(evs), EVPOOLSIZE, &ts);
 #else
     #error Need to support epoll or kqueue
 #endif
