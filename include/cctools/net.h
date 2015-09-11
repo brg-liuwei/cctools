@@ -113,6 +113,8 @@ class CommonIOEvent : public IOEvent {
         CommonIOEvent(int fd, int exp, string cliAddr, int cliPort, Logger *l);
         virtual string Name();
         virtual void Proc(EventType type);
+    protected:
+        virtual void bufProc(string &rbuf, string &wbuf);
     private:
         void readProc();
         void writeProc();

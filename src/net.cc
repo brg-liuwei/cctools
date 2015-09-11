@@ -164,6 +164,10 @@ void CommonIOEvent::Proc(EventType type) {
     }
 }
 
+void CommonIOEvent::bufProc(string &rbuf, string &wbuf) {
+    wbuf.assign("{\"msg\":\"read ok\"}");
+}
+
 void CommonIOEvent::readProc() {
     if (rremain < 0) {
         // read header
@@ -216,8 +220,9 @@ void CommonIOEvent::readProc() {
     // read ok
     assert(rremain == 0);
 
-    // bufProc();
-    wbuf.assign("{\"msg\":\"read ok\"}");
+    wbuf.clear();
+    bufProc(rbuf, wbuf);
+    rbuf.clear();
 
     type = EVT_WRITE;
     if (net->ModIOEvent(this) == false) {
@@ -227,7 +232,6 @@ void CommonIOEvent::readProc() {
 
     headIdx = -1;
     rremain = -1;
-    rbuf.clear();
     return;
 
 error:
