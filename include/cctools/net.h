@@ -118,9 +118,10 @@ class CommonIOEvent : public IOEvent {
     private:
         void readProc();
         void writeProc();
-    private:
+    protected:
         string cliAddr;
         int cliPort;
+    private:
         int headIdx;
         char head[9]; // format eg: "00000123" => rbuf length is 123
         int rremain;
