@@ -71,7 +71,7 @@ struct pEventComparator {
 class IOEvent : public Event {
     public:
         IOEvent(int fd, int exp) : Event(exp), fd(fd) {}
-        ~IOEvent() {
+        virtual ~IOEvent() {
             if (fd >= 0) {
                 close(fd);
                 fd = -1;
@@ -90,11 +90,19 @@ class IOEvent : public Event {
         void operator=(const IOEvent &);
 };
 
-typedef IOEvent* (*IOEventCreater)(int fd, sockaddr *addr, Logger *l);
+class IOEventCreater {
+    public:
+        IOEventCreater() {}
+        virtual ~IOEventCreater() {}
+        virtual IOEvent *Create(int fd, sockaddr *addr, Logger *l) = 0;
+    private:
+        IOEventCreater(const IOEventCreater &);
+};
 
 class ListenEvent : public IOEvent {
     public:
-        ListenEvent(string ip, int port, IOEventCreater func, Logger *l);
+        ListenEvent(string ip, int port, IOEventCreater *creater, Logger *l);
+        virtual ~ListenEvent();
         virtual string Name();
         virtual void Proc(EventType type);
     private:
@@ -102,7 +110,7 @@ class ListenEvent : public IOEvent {
     private:
         string listenAddr;
         int listenPort;
-        IOEventCreater ioevCreater;
+        IOEventCreater *ioevCreater;
     private:
         ListenEvent(const ListenEvent &);
         void operator=(const ListenEvent &);
@@ -111,6 +119,7 @@ class ListenEvent : public IOEvent {
 class CommonIOEvent : public IOEvent {
     public:
         CommonIOEvent(int fd, int exp, string cliAddr, int cliPort, Logger *l);
+        ~CommonIOEvent() {}
         virtual string Name();
         virtual void Proc(EventType type);
     protected:
@@ -132,7 +141,16 @@ class CommonIOEvent : public IOEvent {
         void operator=(const CommonIOEvent &);
 };
 
-IOEvent *CommonIOEventCreater(int fd, sockaddr *addr, Logger *l);
+class CommonIOEventCreater : public IOEventCreater {
+    public:
+        CommonIOEventCreater() {}
+        virtual ~CommonIOEventCreater() {}
+        virtual IOEvent *Create(int fd, sockaddr *addr, Logger *l);
+    private:
+        CommonIOEventCreater(const CommonIOEventCreater &);
+        void operator=(const CommonIOEventCreater &);
+};
+
 
 class Net {
     public:
@@ -153,7 +171,6 @@ class Net {
         priority_queue<Event *, vector<Event *>, pEventComparator> heap;
 
     private:
-        // No copy allowed
         Net(const Net &);
         void operator=(const Net &);
 };

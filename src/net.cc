@@ -27,8 +27,8 @@ using namespace std;
 
 namespace cctools {
 
-ListenEvent::ListenEvent(string ip, int port, IOEventCreater func, Logger *l) :
-    IOEvent(), listenAddr(ip), listenPort(port), ioevCreater(func)
+ListenEvent::ListenEvent(string ip, int port, IOEventCreater *creater, Logger *l) :
+    IOEvent(), listenAddr(ip), listenPort(port), ioevCreater(creater)
 {
     type = EVT_READ;
     SetLogger(l);
@@ -61,6 +61,10 @@ ListenEvent::ListenEvent(string ip, int port, IOEventCreater func, Logger *l) :
     }
 }
 
+ListenEvent::~ListenEvent() {
+    delete ioevCreater;
+}
+
 string ListenEvent::Name() {
     string name("ListenEvent[" + listenAddr + ":" + Itos(listenPort) + "]");
     return name;
@@ -81,7 +85,7 @@ void ListenEvent::acceptProc() {
             }
             return;
         }
-        IOEvent *e = ioevCreater(sock, reinterpret_cast<sockaddr *>(&remoteAddr), logger);
+        IOEvent *e = ioevCreater->Create(sock, reinterpret_cast<sockaddr *>(&remoteAddr), logger);
         if (e == NULL) {
             logger->Error(Name() + "\'s IOEventCreater create NULL event");
             close(sock);
@@ -298,7 +302,7 @@ error:
     fd = -1;
 }
 
-IOEvent *CommonIOEventCreater(int fd, sockaddr *addr, Logger *l) {
+IOEvent *CommonIOEventCreater::Create(int fd, sockaddr *addr, Logger *l) {
     assert(fd >= 0);
     assert(addr != NULL);
     assert(l != NULL);
@@ -513,7 +517,7 @@ void Net::Start() {
         if (milli < 0) {
             milli = 0;
         }
-        logger->Debug(">>> heap size: " + Itos(heap.size()) + ", wait: " + Itos(milli));
+        logger->Debug("event heap size: " + Itos(heap.size()) + ", wait: " + Itos(milli));
 #ifdef HAVE_EPOLL
         int nevs = epoll_wait(evfd, reinterpret_cast<struct epoll_event *>(evs), EVPOOLSIZE, milli);
 #elif defined HAVE_KQUEUE
