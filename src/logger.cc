@@ -17,12 +17,18 @@ using namespace std;
 namespace cctools {
 
 namespace {
-    char levels[][sizeof("[DEBUG]")] = {
-        "[DEBUG]",
+
+#define RED "\033[31m"
+#define YELLOW "\033[33m"
+#define BLUE "\033[34m"
+#define NONE "\033[0m"
+
+    char levels[][sizeof(RED) + sizeof("[DEBUG]")] = {
+        BLUE "[DEBUG]",
         "[INFO]",
-        "[WARN]",
-        "[ERROR]",
-        "[CRIT]"
+        YELLOW "[WARN]",
+        RED "[ERROR]",
+        RED "[CRIT]"
     };
     const size_t bufsize = 1024;
 
@@ -31,7 +37,7 @@ namespace {
         size_t nprefix = (sizeof("2015-08-17 22:31:59 888 ") - 1) + (strlen(levels[level]) + 1);
 
         // two more bytes, one for '\n', other one for '\0'
-        size_t record_size = nprefix + msg.size() + 2;
+        size_t record_size = nprefix + msg.size() + sizeof(NONE) + 2;
         bool alloc = false;
         char *p;
 
@@ -49,7 +55,7 @@ namespace {
         gettimeofday(&tv, NULL);
         localtime_r(&tv.tv_sec, &now);
 
-        int n = sprintf(p, "%04d-%02d-%02d %02d:%02d:%02d %03d %s %s\n",
+        int n = sprintf(p, "%04d-%02d-%02d %02d:%02d:%02d %03d %s %s%s\n",
                 now.tm_year + 1990,
                 now.tm_mon + 1,
                 now.tm_mday,
@@ -58,7 +64,8 @@ namespace {
                 now.tm_sec,
                 (int)(tv.tv_usec / 1000),
                 levels[level],
-                msg.c_str());
+                msg.c_str(),
+                NONE);
 
         write(fd, p, n);
 

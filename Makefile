@@ -10,7 +10,7 @@ TEST_NET_BIN = bin/net_test
 
 IFLAGS = -I. -I./src/ -I./include/
 LFLAGS = -L. -lcctools -lpthread
-CFLAGS = -fPIC #-DNDEBUG
+CFLAGS = -fPIC -DNDEBUG
 
 STATIC_LIB = libcctools.a
 DYNAMIC_LIB = libcctools.${DY_SUFFIX}

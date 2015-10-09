@@ -84,15 +84,15 @@ void test_conf() {
 
 void test_logger() {
     Logger *log = new Logger("log_test.log");
-    log->Debug("this is debug message");
-    log->Info("this is info message");
-    string long_msg("this is long message ");
+    log->Debug(__FILE__ " this is debug message");
+    log->Info(__FILE__ " this is info message");
+    string long_msg(" this is long message ");
     string msg;
     while (msg.size() <= 1024) {
         msg.append(long_msg);
     }
     log->Warn(msg);
-    log->Error("this is error message");
+    log->Error(" this is error message");
     log->Crit("this is crit message, program will abort after this record");
     delete log;
 }

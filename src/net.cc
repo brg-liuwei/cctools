@@ -77,7 +77,7 @@ void ListenEvent::acceptProc() {
     sockaddr_in remoteAddr;
     socklen_t socklen;
     while (true) {
-	bzero(reinterpret_cast<void *>(&remoteAddr), sizeof(sockaddr_in));
+        bzero(reinterpret_cast<void *>(&remoteAddr), sizeof(sockaddr_in));
         int sock = accept(fd, reinterpret_cast<sockaddr *>(&remoteAddr), &socklen);
         if (sock == -1) {
             if (errno != EWOULDBLOCK) {
