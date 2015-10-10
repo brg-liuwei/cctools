@@ -21,6 +21,11 @@ namespace cctools {
             bool GetInt(string key, int &val);
             bool GetIntVec(string key, vector<int> &val, char sep);
 
+            string String(string key);
+            vector<string> StringVec(string key, char sep);
+            int Int(string key);
+            vector<int> IntVec(string key, char sep);
+
         private:
             FILE *fp;
             map<string, string> m;

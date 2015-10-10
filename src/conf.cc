@@ -133,8 +133,20 @@ bool Conf::GetString(string key, string &val) {
     return true;
 }
 
+string Conf::String(string key) {
+    string val;
+    GetString(key, val);
+    return val;
+}
+
 bool Conf::GetStringVec(string key, vector<string> &val, char sep) {
     return split(key, val, sep);
+}
+
+vector<string> Conf::StringVec(string key, char sep) {
+    vector<string> vec;
+    GetStringVec(key, vec, sep);
+    return vec;
 }
 
 bool Conf::GetInt(string key, int &val) {
@@ -144,6 +156,18 @@ bool Conf::GetInt(string key, int &val) {
         return false;
     }
     return strAtoi(itr->second, val);
+}
+
+int Conf::Int(string key) {
+    int val(0);
+    GetInt(key, val);
+    return val;
+}
+
+vector<int> Conf::IntVec(string key, char sep) {
+    vector<int> vec;
+    GetIntVec(key, vec, sep);
+    return vec;
 }
 
 bool Conf::GetIntVec(string key, vector<int> &val, char sep) {
