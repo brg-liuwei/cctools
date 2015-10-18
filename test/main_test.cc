@@ -2,6 +2,7 @@
 #include "cctools/threadSafeMap.h"
 #include "cctools/conf.h"
 #include "cctools/logger.h"
+#include "cctools/util.h"
 
 #include <new>
 #include <iostream>
@@ -97,10 +98,18 @@ void test_logger() {
     delete log;
 }
 
+void test_util() {
+    string s1(Itos(314));
+    cout << "Itos(314) = " << s1 << endl;
+    string s2(Ttos(3.14));
+    cout << "Ttos(3.14) = " << s2 << endl;
+}
+
 int main() {
     test_pool();
     test_thread_safe_map();
     test_conf();
+    test_util();
     test_logger();
     return 0;
 }
