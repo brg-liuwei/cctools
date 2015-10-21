@@ -213,7 +213,7 @@ class ListenEvent : public IOEvent {
 
                 string cliAddr(inet_ntoa(reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_addr));
                 int cliPort(ntohs(reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_port));
-                IOEvent *e = new T(fd, 10 * 60 * 1000, cliAddr, cliPort, logger); // expire: 10min
+                IOEvent *e = new T(sock, 10 * 60 * 1000, cliAddr, cliPort, logger); // expire: 10min
 
                 if (e == NULL) {
                     logger->Error(Name() + ": create IOEvent NULL");
