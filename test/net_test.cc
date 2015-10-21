@@ -36,11 +36,11 @@ int main() {
     assert(l != NULL);
 
     Net service(l);
-    IOEventCreater *creater = new CommonIOEventCreater;
-    IOEvent *lev = new ListenEvent("127.0.0.1", 6666, creater, l);
-    Event *cron = new CronEvent(l);
 
+    IOEvent *lev = new ListenEvent<CommonIOEvent>("127.0.0.1", 6666, l);
     service.AddIOEvent(lev);
+
+    Event *cron = new CronEvent(l);
     service.PushEvent(cron);
 
     service.Start();

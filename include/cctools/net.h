@@ -5,16 +5,18 @@
 #include <queue>
 #include <vector>
 
+#include <signal.h>
 #include <assert.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 #include "cctools/util.h"
 #include "cctools/logger.h"
 
-using namespace std;
-
 struct sockaddr;
 struct sockaddr_in;
+
+using namespace std;
 
 namespace cctools {
 
@@ -90,30 +92,47 @@ class IOEvent : public Event {
         void operator=(const IOEvent &);
 };
 
-class IOEventCreater {
+class Net {
     public:
-        IOEventCreater() {}
-        virtual ~IOEventCreater() {}
-        virtual IOEvent *Create(int fd, sockaddr *addr, Logger *l) = 0;
+        explicit Net(Logger *l);
+        virtual ~Net(); 
+
+        void PushEvent(Event *e);
+        Event *PopEvent();
+
+        bool AddIOEvent(IOEvent *e);
+        bool ModIOEvent(IOEvent *e);
+        bool DelIOEvent(IOEvent *e);
+
+        void Start();
+        void Stop();
+
     private:
-        IOEventCreater(const IOEventCreater &);
+        int evfd;
+        bool running;
+        Logger *logger;
+        priority_queue<Event *, vector<Event *>, pEventComparator> heap;
+
+    private:
+        Net(const Net &);
+        void operator=(const Net &);
 };
 
+template <typename T>
 class ListenEvent : public IOEvent {
     public:
-        ListenEvent(string ip, int port, IOEventCreater *creater, Logger *l);
-        virtual ~ListenEvent();
+        ListenEvent(string ip, int port, Logger *l);
+        virtual ~ListenEvent() {}
         virtual string Name();
         virtual void Proc(EventType type);
     private:
-        void acceptProc();
-    private:
         string listenAddr;
         int listenPort;
-        IOEventCreater *ioevCreater;
     private:
         ListenEvent(const ListenEvent &);
         void operator=(const ListenEvent &);
+    private:
+        void acceptProc();
 };
 
 class CommonIOEvent : public IOEvent {
@@ -139,40 +158,6 @@ class CommonIOEvent : public IOEvent {
     private:
         CommonIOEvent(const CommonIOEvent &);
         void operator=(const CommonIOEvent &);
-};
-
-class CommonIOEventCreater : public IOEventCreater {
-    public:
-        CommonIOEventCreater() {}
-        virtual ~CommonIOEventCreater() {}
-        virtual IOEvent *Create(int fd, sockaddr *addr, Logger *l);
-    private:
-        CommonIOEventCreater(const CommonIOEventCreater &);
-        void operator=(const CommonIOEventCreater &);
-};
-
-
-class Net {
-    public:
-        explicit Net(Logger *l);
-        virtual ~Net();
-        void PushEvent(Event *e);
-        Event *PopEvent();
-        bool AddIOEvent(IOEvent *e);
-        bool ModIOEvent(IOEvent *e);
-        bool DelIOEvent(IOEvent *e);
-        void Start();
-        void Stop();
-
-    private:
-        int evfd;
-        bool running;
-        Logger *logger;
-        priority_queue<Event *, vector<Event *>, pEventComparator> heap;
-
-    private:
-        Net(const Net &);
-        void operator=(const Net &);
 };
 
 };

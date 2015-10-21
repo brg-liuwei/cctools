@@ -1,13 +1,11 @@
 #include "cctools/net.h"
 #include "cctools/util.h"
 
-#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
@@ -21,103 +19,9 @@
     #include <sys/time.h>
 #endif
 
-#include <string>
-
 using namespace std;
 
 namespace cctools {
-
-ListenEvent::ListenEvent(string ip, int port, IOEventCreater *creater, Logger *l) :
-    IOEvent(), listenAddr(ip), listenPort(port), ioevCreater(creater)
-{
-    type = EVT_READ;
-    SetLogger(l);
-    fd = socket(PF_INET, SOCK_STREAM, 0);
-    if (fd == -1) {
-        logger->Crit("fail to create socket: " + Ctos(strerror(errno)));
-    }
-
-    int flag = fcntl(fd, F_GETFL, 0);
-    if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1) {
-        logger->Crit(Name() + " fcntl set nonblock error: " + Ctos(strerror(errno)));
-    }
-
-    int opt = 1;
-    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
-        logger->Crit("fail to set socket reuse: " + Ctos(strerror(errno)));
-    }
-
-    sockaddr_in addr;
-    addr.sin_family = PF_INET;
-    addr.sin_port = htons(listenPort);
-    addr.sin_addr.s_addr = inet_addr(listenAddr.c_str());
-
-    if (bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {
-        logger->Crit("fail to bind socket: " + Ctos(strerror(errno)));
-    }
-
-    if (listen(fd, 128) == -1) {
-        logger->Crit("fail to listen: " + Ctos(strerror(errno)));
-    }
-}
-
-ListenEvent::~ListenEvent() {
-    delete ioevCreater;
-}
-
-string ListenEvent::Name() {
-    string name("ListenEvent[" + listenAddr + ":" + Itos(listenPort) + "]");
-    return name;
-}
-
-void ListenEvent::acceptProc() {
-    if (net == NULL) {
-        logger->Crit(Name() + " net is NULL");
-    }
-    sockaddr_in remoteAddr;
-    socklen_t socklen;
-    while (true) {
-        bzero(reinterpret_cast<void *>(&remoteAddr), sizeof(sockaddr_in));
-        int sock = accept(fd, reinterpret_cast<sockaddr *>(&remoteAddr), &socklen);
-        if (sock == -1) {
-            if (errno != EWOULDBLOCK) {
-                logger->Error(Name() + " accept error: " + Ctos(strerror(errno)));
-            }
-            return;
-        }
-        IOEvent *e = ioevCreater->Create(sock, reinterpret_cast<sockaddr *>(&remoteAddr), logger);
-        if (e == NULL) {
-            logger->Error(Name() + "\'s IOEventCreater create NULL event");
-            close(sock);
-        } else if (net->AddIOEvent(e) == false) {
-            logger->Error(Name() + " add IOEvent error, event: " + e->Name());
-            delete e;
-        }
-    }
-}
-
-void ListenEvent::Proc(EventType type) {
-    switch (type) {
-        case EVT_ERROR:
-            logger->Error(Name() + " error, close socket " + Itos(fd));
-            if (fd >= 0) {
-                close(fd);
-                fd = -1;
-            }
-            break;
-        case EVT_READ:
-            acceptProc();
-            break;
-        case EVT_WRITE:
-            logger->Crit(Name() + " write event cannot be happened on listen event");
-            break;
-        case EVT_EXPIRE:
-            logger->Debug(Name() + " expire event happened");
-            break;
-        default:
-            logger->Error(Name() + "Unexpect event type: " + Itos(type));
-    }
-}
 
 CommonIOEvent::CommonIOEvent(int fd, int exp, string cliAddr, int cliPort, Logger *l) :
     IOEvent(fd, exp), cliAddr(cliAddr), cliPort(cliPort),
@@ -302,28 +206,16 @@ error:
     fd = -1;
 }
 
-IOEvent *CommonIOEventCreater::Create(int fd, sockaddr *addr, Logger *l) {
-    assert(fd >= 0);
-    assert(addr != NULL);
-    assert(l != NULL);
-
-    string cliAddr(inet_ntoa(reinterpret_cast<sockaddr_in *>(addr)->sin_addr));
-    int cliPort(ntohs(reinterpret_cast<sockaddr_in *>(addr)->sin_port));
-    return new CommonIOEvent(fd, 1 * 60 * 1000, cliAddr, cliPort, l); // expire: 1min
-}
-
 #define EVPOOLSIZE 1024
 
-Net::Net(Logger *l) :
-    logger(l)
-{
+Net::Net(Logger *l) : logger(l) {
     logger->Debug("New Net Server");
 #ifdef HAVE_EPOLL
     evfd = epoll_create(EVPOOLSIZE);
 #elif defined HAVE_KQUEUE
     evfd = kqueue();
 #else
-    #error Need to support epoll or kqueue
+#error Need to support epoll or kqueue
 #endif
     if (evfd == -1) {
         logger->Crit(strerror(errno));
@@ -395,7 +287,7 @@ bool Net::AddIOEvent(IOEvent *e) {
         return false;
     }
 #else
-    #error Need to support epoll or kqueue
+#error Need to support epoll or kqueue
 #endif
     PushEvent(e);
     logger->Debug("Add IOEvent: " + e->Name());
@@ -449,7 +341,7 @@ bool Net::ModIOEvent(IOEvent *e) {
         return false;
     }
 #else
-    #error Need to support epoll or kqueue
+#error Need to support epoll or kqueue
 #endif
     return true;
 }
@@ -479,7 +371,7 @@ bool Net::DelIOEvent(IOEvent *e) {
         return false;
     }
 #else
-    #error Need to support epoll or kqueue
+#error Need to support epoll or kqueue
 #endif
     return true;
 }
@@ -508,9 +400,8 @@ void Net::Start() {
 #elif defined HAVE_KQUEUE
     struct kevent *evs[EVPOOLSIZE];
 #else
-    #error Need to support epoll or kqueue
+#error Need to support epoll or kqueue
 #endif
-
 
     while (running && !heap.empty()) {
         int milli = heap.top()->ExpireTimestamp() - Now();
@@ -526,7 +417,7 @@ void Net::Start() {
         ts.tv_nsec = (milli % 1000) * 1000 * 1000;
         int nevs = kevent(evfd, NULL, 0, reinterpret_cast<struct kevent *>(evs), EVPOOLSIZE, &ts);
 #else
-    #error Need to support epoll or kqueue
+#error Need to support epoll or kqueue
 #endif
         if (nevs < 0) {
             logger->Warn("epoll wait error: " + Ctos(strerror(errno)));
@@ -562,7 +453,7 @@ void Net::Start() {
                         e->Proc(EVT_ERROR);
                 }
 #else
-    #error Need to support epoll or kqueue
+#error Need to support epoll or kqueue
 #endif
             }
         }
@@ -597,6 +488,104 @@ void Net::Start() {
 
 void Net::Stop() {
     running = false;
+}
+
+#undef EVPOOLSIZE
+
+template<typename T>
+ListenEvent<T>::ListenEvent(string ip, int port, Logger *l) :
+    IOEvent(), listenAddr(ip), listenPort(port)
+{
+    type = EVT_READ;
+    SetLogger(l);
+    fd = socket(PF_INET, SOCK_STREAM, 0);
+    if (fd == -1) {
+        logger->Crit("fail to create socket: " + Ctos(strerror(errno)));
+    }
+
+    int flag = fcntl(fd, F_GETFL, 0);
+    if (fcntl(fd, F_SETFL, flag | O_NONBLOCK) == -1) {
+        logger->Crit(Name() + " fcntl set nonblock error: " + Ctos(strerror(errno)));
+    }
+
+    int opt = 1;
+    if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) == -1) {
+        logger->Crit("fail to set socket reuse: " + Ctos(strerror(errno)));
+    }
+
+    sockaddr_in addr;
+    addr.sin_family = PF_INET;
+    addr.sin_port = htons(listenPort);
+    addr.sin_addr.s_addr = inet_addr(listenAddr.c_str());
+
+    if (bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {
+        logger->Crit("fail to bind socket: " + Ctos(strerror(errno)));
+    }
+
+    if (listen(fd, 128) == -1) {
+        logger->Crit("fail to listen: " + Ctos(strerror(errno)));
+    }
+}
+
+template <typename T>
+string ListenEvent<T>::Name() {
+    string name("ListenEvent[" + listenAddr + ":" + Itos(listenPort) + "]");
+    return name;
+}
+
+template<typename T>
+void ListenEvent<T>::Proc(EventType type) {
+    switch (type) {
+        case EVT_ERROR:
+            logger->Error(Name() + " error, close socket " + Itos(fd));
+            if (fd >= 0) {
+                close(fd);
+                fd = -1;
+            }
+            break;
+        case EVT_READ:
+            acceptProc();
+            break;
+        case EVT_WRITE:
+            logger->Crit(Name() + " write event cannot be happened on listen event");
+            break;
+        case EVT_EXPIRE:
+            logger->Debug(Name() + " expire event happened");
+            break;
+        default:
+            logger->Error(Name() + "Unexpect event type: " + Itos(type));
+    }
+}
+
+template<typename T>
+void ListenEvent<T>::acceptProc() {
+    if (net == NULL) {
+        logger->Crit(Name() + " net is NULL");
+    }
+    sockaddr_in remoteAddr;
+    socklen_t socklen;
+    while (true) {
+        bzero(reinterpret_cast<void *>(&remoteAddr), sizeof(sockaddr_in));
+        int sock = accept(fd, reinterpret_cast<sockaddr *>(&remoteAddr), &socklen);
+        if (sock == -1) {
+            if (errno != EWOULDBLOCK) {
+                logger->Error(Name() + " accept error: " + Ctos(strerror(errno)));
+            }
+            return;
+        }
+
+        string cliAddr(inet_ntoa(reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_addr));
+        int cliPort(ntohs(reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_port));
+        IOEvent *e = new T(fd, 10 * 60 * 1000, cliAddr, cliPort, logger); // expire: 10min
+
+        if (e == NULL) {
+            logger->Error(Name() + ": create IOEvent NULL");
+            close(sock);
+        } else if (net->AddIOEvent(e) == false) {
+            logger->Error(Name() + " add IOEvent error, event: " + e->Name());
+            delete e;
+        }
+    }
 }
 
 };
