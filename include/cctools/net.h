@@ -5,6 +5,8 @@
 #include <queue>
 #include <vector>
 
+#include <errno.h>
+#include <string.h>
 #include <signal.h>
 #include <assert.h>
 #include <unistd.h>
