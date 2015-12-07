@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <arpa/inet.h>
 
 #include "cctools/util.h"
@@ -146,6 +147,10 @@ class ListenEvent : public IOEvent {
                 logger->Crit("fail to set socket reuse: " + Ctos(strerror(errno)));
             }
 
+            if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) == -1) {
+                logger->Crit("fail to set socket no delay: " + Ctos(strerror(errno)));
+            }
+
             sockaddr_in addr;
             addr.sin_family = PF_INET;
             addr.sin_port = htons(listenPort);
@@ -211,6 +216,17 @@ class ListenEvent : public IOEvent {
                         logger->Error(Name() + " accept error: " + Ctos(strerror(errno)));
                     }
                     return;
+                }
+
+                int flag = fcntl(fd, F_GETFL, 0);
+                if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) == -1) {
+                    logger->Crit(Name() + 
+                            " fcntl set accepted sock nonblock error: " + Ctos(strerror(errno)));
+                }
+
+                int opt = 1;
+                if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) == -1) {
+                    logger->Crit("fail to set accepted socket no delay: " + Ctos(strerror(errno)));
                 }
 
                 string cliAddr(inet_ntoa(reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_addr));
