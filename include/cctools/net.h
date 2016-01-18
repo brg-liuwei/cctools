@@ -130,6 +130,7 @@ class ListenEvent : public IOEvent {
             : IOEvent(), listenAddr(ip), listenPort(port)
         {
             type = EVT_READ;
+
             SetLogger(l);
             fd = socket(PF_INET, SOCK_STREAM, 0);
             if (fd == -1) {
@@ -210,10 +211,12 @@ class ListenEvent : public IOEvent {
             socklen_t socklen;
             while (true) {
                 bzero(reinterpret_cast<void *>(&remoteAddr), sizeof(sockaddr_in));
-                int sock = accept(fd, reinterpret_cast<sockaddr *>(&remoteAddr), &socklen);
+                int sock = accept(fd,
+                        reinterpret_cast<sockaddr *>(&remoteAddr), &socklen);
                 if (sock == -1) {
                     if (errno != EWOULDBLOCK) {
-                        logger->Error(Name() + " accept error: " + Ctos(strerror(errno)));
+                        logger->Error(Name() + " accept error: " +
+                                Ctos(strerror(errno)));
                     }
                     return;
                 }
@@ -221,17 +224,24 @@ class ListenEvent : public IOEvent {
                 int flag = fcntl(fd, F_GETFL, 0);
                 if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) == -1) {
                     logger->Crit(Name() + 
-                            " fcntl set accepted sock nonblock error: " + Ctos(strerror(errno)));
+                            " fcntl set accepted sock nonblock error: " +
+                            Ctos(strerror(errno)));
                 }
 
                 int opt = 1;
-                if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &opt, sizeof(opt)) == -1) {
-                    logger->Crit("fail to set accepted socket no delay: " + Ctos(strerror(errno)));
+                if (setsockopt(fd, IPPROTO_TCP,
+                            TCP_NODELAY, &opt, sizeof(opt)) == -1)
+                {
+                    logger->Crit("fail to set accepted socket no delay: " +
+                            Ctos(strerror(errno)));
                 }
 
-                string cliAddr(inet_ntoa(reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_addr));
-                int cliPort(ntohs(reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_port));
-                IOEvent *e = new T(sock, 10 * 60 * 1000, cliAddr, cliPort, logger); // expire: 10min
+                string cliAddr(inet_ntoa(
+                            reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_addr));
+                int cliPort(ntohs(
+                            reinterpret_cast<sockaddr_in *>(&remoteAddr)->sin_port));
+                IOEvent *e = new T(sock, 10 * 60 * 1000, 
+                        cliAddr, cliPort, logger); // expire: 10min
 
                 if (e == NULL) {
                     logger->Error(Name() + ": create IOEvent NULL");
