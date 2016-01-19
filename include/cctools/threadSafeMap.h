@@ -46,7 +46,7 @@ namespace cctools {
                 UnlockDel(key);
             }
 
-            RWMutex &GetRWMutex() {
+            RWMutex &GetRWMutexRef() {
                 return rwmut;
             }
         protected:
