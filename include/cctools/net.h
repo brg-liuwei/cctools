@@ -126,7 +126,7 @@ class Net {
 template <typename T>
 class ListenEvent : public IOEvent {
     public:
-        ListenEvent(string ip, int port, Logger *l) 
+        ListenEvent(string ip, int port, Logger *l, int backlog = 1024) 
             : IOEvent(), listenAddr(ip), listenPort(port)
         {
             type = EVT_READ;
@@ -161,7 +161,7 @@ class ListenEvent : public IOEvent {
                 logger->Crit("fail to bind socket: " + Ctos(strerror(errno)));
             }
 
-            if (listen(fd, 128) == -1) {
+            if (listen(fd, backlog) == -1) {
                 logger->Crit("fail to listen: " + Ctos(strerror(errno)));
             }
         }
@@ -221,7 +221,7 @@ class ListenEvent : public IOEvent {
                     return;
                 }
 
-                int flag = fcntl(fd, F_GETFL, 0);
+                int flag = fcntl(sock, F_GETFL, 0);
                 if (fcntl(sock, F_SETFL, flag | O_NONBLOCK) == -1) {
                     logger->Crit(Name() + 
                             " fcntl set accepted sock nonblock error: " +
@@ -229,7 +229,7 @@ class ListenEvent : public IOEvent {
                 }
 
                 int opt = 1;
-                if (setsockopt(fd, IPPROTO_TCP,
+                if (setsockopt(sock, IPPROTO_TCP,
                             TCP_NODELAY, &opt, sizeof(opt)) == -1)
                 {
                     logger->Crit("fail to set accepted socket no delay: " +
