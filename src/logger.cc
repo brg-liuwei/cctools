@@ -56,7 +56,7 @@ namespace {
         localtime_r(&tv.tv_sec, &now);
 
         int n = sprintf(p, "%04d-%02d-%02d %02d:%02d:%02d %03d %s %s%s\n",
-                now.tm_year + 1990,
+                now.tm_year + 1900,
                 now.tm_mon + 1,
                 now.tm_mday,
                 now.tm_hour,

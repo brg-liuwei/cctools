@@ -40,8 +40,8 @@ class Event {
             UpdateTimestamp();
         }
         virtual ~Event() {}
-        int GetTimestamp() const { return ts; }
-        int ExpireTimestamp() const { return ts + exp; }
+        volatile int GetTimestamp() const { return ts; }
+        volatile int ExpireTimestamp() const { return ts + exp; }
         void SetExpire(int exp) {
             assert(exp > 0);
             this->exp = exp;
@@ -60,7 +60,7 @@ class Event {
         Logger *logger;
 
     private:
-        int ts;
+        volatile int ts;
         int exp; // expire in milliseconds
 
     private:

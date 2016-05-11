@@ -454,7 +454,7 @@ void Net::Start() {
             }
         }
         int now = Now();
-        while (!heap.empty() && now >= heap.top()->ExpireTimestamp()) {
+        while (!heap.empty() && now > heap.top()->ExpireTimestamp()) {
             Event *e = PopEvent();
             e->Proc(EVT_EXPIRE);
             if (e->Active()) {
