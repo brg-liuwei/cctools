@@ -83,7 +83,7 @@ Conf::Conf(FILE *openFp, char sep) : fp(openFp) {
         }
         *psep = '\0';
         string key(line), val(psep+1);
-        m.insert(make_pair<string,string>(trim(key), trim(val)));
+        m.insert(pair<string, string>(trim(key), trim(val)));
     }
 #ifndef NDEBUG
     // dump conf file

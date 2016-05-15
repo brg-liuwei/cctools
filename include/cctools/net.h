@@ -157,7 +157,7 @@ class ListenEvent : public IOEvent {
             addr.sin_port = htons(listenPort);
             addr.sin_addr.s_addr = inet_addr(listenAddr.c_str());
 
-            if (bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {
+            if (::bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof(addr)) == -1) {
                 logger->Crit("fail to bind socket: " + Ctos(strerror(errno)));
             }
 
